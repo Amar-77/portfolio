@@ -5,7 +5,7 @@ import { useScroll, useTransform, motion, useSpring, useMotionValueEvent } from 
 import IdentityTextOverlay from "./IdentityTextOverlay";
 
 const FRAME_COUNT = 238;
-const IMAGES_DIR = "/amar_animation";
+const IMAGES_DIR = "/portfolio/amar_animation";
 
 export default function HeroScrollExperience() {
     const containerRef = useRef<HTMLDivElement>(null);
