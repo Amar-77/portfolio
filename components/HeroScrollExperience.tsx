@@ -4,7 +4,9 @@ import { useRef, useEffect, useState } from "react";
 import { useScroll, useTransform, motion, useSpring, useMotionValueEvent } from "framer-motion";
 import IdentityTextOverlay from "./IdentityTextOverlay";
 
-const FRAME_COUNT = 238;
+// 190 frames as per the new folder content
+const FRAME_COUNT = 190;
+// Note: We use the base path for production compatibility
 const IMAGES_DIR = "/portfolio/amar_animation";
 
 export default function HeroScrollExperience() {
@@ -28,16 +30,16 @@ export default function HeroScrollExperience() {
 
     // Preload images
     useEffect(() => {
-        let loadedCount = 0;
         const imgArray: HTMLImageElement[] = [];
+        let loadedCount = 0;
 
         const loadImages = async () => {
             for (let i = 0; i < FRAME_COUNT; i++) {
                 const img = new Image();
-                // Filename format: upscaled-video_2000.jpg
-                // We start at 2000
-                const fileIndex = 2000 + i;
-                img.src = `${IMAGES_DIR}/upscaled-video_${fileIndex}.jpg`;
+                // Filename format: upscaled-video000.webp
+                // Note: file system showed 3 digits padding (000, 001...)
+                const paddedIndex = i.toString().padStart(3, "0");
+                img.src = `${IMAGES_DIR}/upscaled-video${paddedIndex}.webp`;
 
                 await new Promise((resolve) => {
                     img.onload = resolve;
@@ -46,7 +48,6 @@ export default function HeroScrollExperience() {
 
                 imgArray.push(img);
                 loadedCount++;
-                // Optional: Update loading state here if we want a progress bar
             }
             setImages(imgArray);
             setIsLoaded(true);
@@ -63,7 +64,6 @@ export default function HeroScrollExperience() {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Use smoothProgress changes to draw
         const render = (progress: number) => {
             const frameIndex = Math.min(
                 FRAME_COUNT - 1,
@@ -72,20 +72,21 @@ export default function HeroScrollExperience() {
 
             const img = images[frameIndex];
             if (img) {
-                // Responsive cover fit
+                // Responsive cover fit calculation
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
 
-                // We want the image to be positioned on the right side.
-                // Let's create a focus point around 75% of width.
                 const scale = Math.max(
                     canvas.width / img.width,
                     canvas.height / img.height
-                ) * 1.1; // Slight zoom to ensure coverage
+                ) * 1.0; // Exact fit
 
-                // Center X at 70% of screen width
+                // Position on the right side (70% of width)
                 const x = (canvas.width * 0.7) - (img.width / 2) * scale;
                 const y = (canvas.height / 2) - (img.height / 2) * scale;
+
+                // Optional: Adjust X if you want it off-center like before
+                // const x = (canvas.width * 0.7) - (img.width / 2) * scale;
 
                 ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
             }
@@ -119,7 +120,7 @@ export default function HeroScrollExperience() {
                     </div>
                 )}
 
-                {/* Canvas for Video/Image Sequence */}
+                {/* Canvas for Image Sequence */}
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 h-full w-full object-cover"
