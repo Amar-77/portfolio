@@ -88,7 +88,7 @@ export const IDENTITY = {
                 id: 4,
                 title: "Ecom RecSys",
                 description: "Real-time recommendation system simulation for e-commerce platforms.",
-                tags: ["Python", "Machine Learning", "Recommendation Systems"],
+                tags: ["Python", "Machine Learning", "Recommendation Systems", "NumPy"],
                 image: "/portfolio/projects/rec_system.jpeg",
                 link: "https://github.com/Amar-77/ecommerce-recsys-simulation"
             },
