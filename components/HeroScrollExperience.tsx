@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useScroll, useTransform, motion, useSpring, useMotionValueEvent } from "framer-motion";
 import IdentityTextOverlay from "./IdentityTextOverlay";
+import Preloader from "./Preloader";
 
 // 190 frames as per the new folder content
 const FRAME_COUNT = 190;
@@ -113,12 +114,8 @@ export default function HeroScrollExperience() {
         <div ref={containerRef} className="relative h-[500vh] bg-white">
             <div className="sticky top-0 h-screen w-full overflow-hidden">
 
-                {/* Loading State */}
-                {!isLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center text-black z-50">
-                        Loading Experience...
-                    </div>
-                )}
+                {/* Creative Preloader - Handles its own exit animation */}
+                <Preloader loaded={isLoaded} />
 
                 {/* Canvas for Image Sequence */}
                 <canvas

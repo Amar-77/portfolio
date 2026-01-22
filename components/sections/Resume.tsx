@@ -22,7 +22,7 @@ export default function Resume() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                     <a
-                        href="/resume.pdf"
+                        href="/portfolio/resume.pdf"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-8 py-4 border border-black text-black font-medium text-lg rounded-full hover:bg-black hover:text-white transition-colors"
@@ -31,7 +31,7 @@ export default function Resume() {
                     </a>
 
                     <a
-                        href="/resume.pdf"
+                        href="/portfolio/resume.pdf"
                         download
                         className="px-8 py-4 bg-black text-white font-medium text-lg rounded-full hover:bg-gray-800 transition-transform hover:scale-105"
                     >
