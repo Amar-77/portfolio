@@ -19,6 +19,9 @@ export const IDENTITY = {
         hero: {
             title: "Hi, I'm Amar",
         },
+        about: {
+            title: "About Me",
+        },
         projects: {
             title: "Selected Works",
         },
@@ -44,6 +47,18 @@ export const IDENTITY = {
         },
     },
     content: {
+        about: {
+            headline: "Computer Science Engineering Undergraduate (2026)",
+            quote: "Turning ideas into intelligent, visually expressive systems that connect technology with people.",
+            bullets: [
+                "Building Data-Driven, Human-Centered Systems",
+                "Passionate about Machine Learning, AI, and building real-world applications.",
+                "Currently learning Data Science and exploring model deployment with FastAPI.",
+                "Strong interest in UI/UX, visual storytelling, and intelligent design.",
+                "Previously built SpeakEase, an award-winning assistive AI app.",
+                "Started as a video editor — now I train models that understand emotion."
+            ]
+        },
         projects: [
             {
                 id: 1,
@@ -76,6 +91,14 @@ export const IDENTITY = {
                 tags: ["Python", "Machine Learning", "Recommendation Systems"],
                 image: "/portfolio/projects/rec_system.jpeg",
                 link: "https://github.com/Amar-77/ecommerce-recsys-simulation"
+            },
+            {
+                id: 5,
+                title: "CubeSat Cloud Filter",
+                description: "An Edge AI flight software simulation that saves satellite bandwidth by filtering cloudy imagery in real-time. Uses a quantized U-Net model (<2MB) to distinguish clouds from snow via Near-Infrared physics before downlink.",
+                tags: ["Python", "TensorFlow Lite", "OpenCV", "NumPy", "Edge AI", "Multispectral Imaging"],
+                image: "/portfolio/projects/cubesat.png",
+                link: "https://github.com/Amar-77/CubeSat-Cloud-Filter"
             },
         ],
         skills: [
