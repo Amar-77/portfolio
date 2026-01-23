@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import HeroScrollExperience from "@/components/HeroScrollExperience";
 import About from "@/components/sections/About";
 import Projects from "@/components/sections/Projects";
+import ProofOfWork from "@/components/sections/ProofOfWork";
 import VideoEditing from "@/components/sections/VideoEditing";
 import Skills from "@/components/sections/Skills";
 import Journey from "@/components/sections/Journey";
@@ -30,6 +31,7 @@ export default function Home() {
       <div className="relative z-10 bg-white">
         <About />
         <Projects />
+        <ProofOfWork />
         <VideoEditing />
         <Skills />
         <Journey />
