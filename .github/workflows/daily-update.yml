@@ -1,0 +1,44 @@
+name: Daily Portfolio Update
+
+on:
+  # Run automatically every day at midnight UTC (approx 5:30 AM IST)
+  schedule:
+    - cron: '0 0 * * *'
+  # Also run whenever you push to main (so code changes deploy immediately)
+  push:
+    branches:
+      - main
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ⚙️
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies 📦
+        run: npm ci
+
+      - name: Update Contribution Data 📊
+        run: npm run update-contributions
+
+      - name: Build 🏗️
+        run: npm run build
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: out # The folder the build process outputs to
+          branch: gh-pages # The branch the action should deploy to

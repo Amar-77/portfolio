@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "predeploy": "npm run build",
+    "update-contributions": "node scripts/update-contributions.mjs",
+    "predeploy": "npm run update-contributions && npm run build",
     "deploy": "gh-pages -d out"
   },
   "dependencies": {
