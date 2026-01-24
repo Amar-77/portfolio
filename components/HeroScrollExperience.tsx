@@ -29,35 +29,83 @@ export default function HeroScrollExperience() {
         restDelta: 0.001
     });
 
-    // Preload images
+    // Preload images with progressive loading strategy
     useEffect(() => {
-        const imgArray: HTMLImageElement[] = [];
+        const imgArray: HTMLImageElement[] = new Array(FRAME_COUNT);
         let loadedCount = 0;
 
-        const loadImages = async () => {
-            for (let i = 0; i < FRAME_COUNT; i++) {
-                const img = new Image();
-                // Filename format: upscaled-video000.webp
-                // Note: file system showed 3 digits padding (000, 001...)
-                const paddedIndex = i.toString().padStart(3, "0");
-                img.src = `${IMAGES_DIR}/upscaled-video${paddedIndex}.webp`;
-
-                await new Promise((resolve) => {
-                    img.onload = resolve;
-                    img.onerror = resolve; // Continue even if error
-                });
-
-                imgArray.push(img);
-                loadedCount++;
+        const updateLoadingProgress = () => {
+            loadedCount++;
+            // Mark as loaded when we have enough frames for smooth playback (Phase 1 complete)
+            if (loadedCount >= Math.ceil(FRAME_COUNT / 10)) {
+                setIsLoaded(true);
             }
-            setImages(imgArray);
-            setIsLoaded(true);
         };
 
-        loadImages();
+        const loadImage = (index: number, priority: number = 0): Promise<void> => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const paddedIndex = index.toString().padStart(3, "0");
+                img.src = `${IMAGES_DIR}/upscaled-video${paddedIndex}.webp`;
+
+                img.onload = () => {
+                    imgArray[index] = img;
+                    updateLoadingProgress();
+                    resolve();
+                };
+                img.onerror = () => {
+                    // Create placeholder to prevent gaps
+                    imgArray[index] = img;
+                    resolve();
+                };
+            });
+        };
+
+        const loadImagesProgressively = async () => {
+            // Phase 1: Load every 10th frame (19 frames = ~300KB)
+            // This gives us instant playback capability
+            const phase1Promises: Promise<void>[] = [];
+            for (let i = 0; i < FRAME_COUNT; i += 10) {
+                phase1Promises.push(loadImage(i, 1));
+            }
+            await Promise.all(phase1Promises);
+            setImages([...imgArray]); // Trigger first render
+
+            // Phase 2: Load every 5th frame (fill gaps)
+            const phase2Promises: Promise<void>[] = [];
+            for (let i = 0; i < FRAME_COUNT; i += 5) {
+                if (i % 10 !== 0) { // Skip already loaded frames
+                    phase2Promises.push(loadImage(i, 2));
+                }
+            }
+            await Promise.all(phase2Promises);
+            setImages([...imgArray]); // Update with more frames
+
+            // Phase 3: Load remaining frames (background)
+            // Use requestIdleCallback for non-blocking load
+            const phase3Indices: number[] = [];
+            for (let i = 0; i < FRAME_COUNT; i++) {
+                if (i % 5 !== 0) { // Skip already loaded frames
+                    phase3Indices.push(i);
+                }
+            }
+
+            // Load in small batches to avoid blocking
+            const batchSize = 10;
+            for (let i = 0; i < phase3Indices.length; i += batchSize) {
+                const batch = phase3Indices.slice(i, i + batchSize);
+                await Promise.all(batch.map(idx => loadImage(idx, 3)));
+                setImages([...imgArray]); // Progressive updates
+
+                // Small delay to prevent blocking
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        };
+
+        loadImagesProgressively();
     }, []);
 
-    // Draw frame
+    // Draw frame with fallback for progressive loading
     useEffect(() => {
         if (!canvasRef.current || images.length === 0) return;
 
@@ -71,8 +119,26 @@ export default function HeroScrollExperience() {
                 Math.floor(progress * (FRAME_COUNT - 1))
             );
 
-            const img = images[frameIndex];
-            if (img) {
+            // Find the nearest loaded frame (for progressive loading)
+            let img = images[frameIndex];
+            if (!img) {
+                // Search for nearest loaded frame
+                for (let offset = 1; offset < FRAME_COUNT; offset++) {
+                    const before = frameIndex - offset;
+                    const after = frameIndex + offset;
+
+                    if (before >= 0 && images[before]) {
+                        img = images[before];
+                        break;
+                    }
+                    if (after < FRAME_COUNT && images[after]) {
+                        img = images[after];
+                        break;
+                    }
+                }
+            }
+
+            if (img && img.complete && img.naturalWidth > 0) {
                 // Responsive cover fit calculation
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
