@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { REAL_CONTRIBUTIONS, ContributionDay } from "@/data/contributions";
+import { ContributionDay } from "@/data/contributions";
 
 // Utility to generate the last 365 days grid (52 weeks x 7 days)
-const generateCalendarGrid = () => {
+const generateCalendarGrid = (contributions: ContributionDay[]) => {
     const today = new Date();
     const days: { date: string; count: number; level: number }[] = [];
     const contributionMap = new Map<string, ContributionDay>();
-    REAL_CONTRIBUTIONS.forEach((day) => {
+    contributions.forEach((day) => {
         contributionMap.set(day.date, day);
     });
 
@@ -28,8 +28,12 @@ const generateCalendarGrid = () => {
     return weeks;
 };
 
-export default function ProofOfWork() {
-    const weeks = useMemo(() => generateCalendarGrid(), []);
+interface ProofOfWorkProps {
+    initialData?: ContributionDay[];
+}
+
+export default function ProofOfWork({ initialData = [] }: ProofOfWorkProps) {
+    const weeks = useMemo(() => generateCalendarGrid(initialData), [initialData]);
     const [hoveredDay, setHoveredDay] = useState<{ date: string; count: number } | null>(null);
 
     return (
@@ -51,7 +55,11 @@ export default function ProofOfWork() {
                 >
                     {/* Inner Grid Container */}
                     <div className="flex flex-col items-center justify-center">
-                        <div className="w-full overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div
+                            className="w-full overflow-x-auto"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            onMouseLeave={() => setHoveredDay(null)} // Fix: Clear hover only when leaving the entire container
+                        >
                             <div className="min-w-max mx-auto flex gap-[3px] items-end justify-center h-[160px]">
                                 {weeks.map((week, weekIndex) => (
                                     <motion.div
@@ -92,7 +100,7 @@ export default function ProofOfWork() {
                                                         height: `${height}px`,
                                                     }}
                                                     onMouseEnter={() => setHoveredDay({ date: day.date, count: day.count })}
-                                                    onMouseLeave={() => setHoveredDay(null)}
+                                                // Removed individual onMouseLeave to prevent flicker
                                                 />
                                             );
                                         })}

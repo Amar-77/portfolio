@@ -1,89 +1,154 @@
 import fs from 'fs';
 import path from 'path';
 
-// Target URL
-const URL = 'https://github.com/users/Amar-77/contributions';
+// GitHub username
+const GITHUB_USERNAME = 'Amar-77';
+
+// GitHub Personal Access Token (optional - falls back to HTML scraping if not provided)
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 // Output path
 const OUTPUT_FILE = path.join(process.cwd(), 'data', 'contributions.ts');
 
-async function fetchContributions() {
-    console.log('Fetching GitHub contributions for Amar-77...');
+/**
+ * Fetch contributions using GitHub GraphQL API (real-time data)
+ */
+async function fetchContributionsViaAPI() {
+    console.log('Fetching contributions via GitHub GraphQL API...');
 
-    try {
-        const response = await fetch(URL);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
-
-        const html = await response.text();
-
-        // Regex to extract data
-        // Looks for <td ... data-date="2024-01-01" data-level="2" ... > ... <span class="sr-only">11 contributions...</span>
-        // Or simpler: match the data-date and data-level attributes, and try to find the count.
-        // GitHub's structure changes slightly, but data-date and data-level are usually stable on the td/rect.
-        // Recently it's: <td tabindex="-1" class="ContributionCalendar-day" data-date="2025-01-21" data-level="2" aria-labelledby="...">
-
-        // Let's use a regex that captures all "ContributionCalendar-day" elements' attributes
-        const dayRegex = /data-date="([^"]+)"\s+data-level="([^"]+)"/g;
-
-        const contributions = [];
-        let match;
-
-        // We also need to map counts roughly. 
-        // GitHub doesn't always put the exact count in an easily regex-able attribute (it's in a tooltip or aria-label linked by ID).
-        // However, for the "Proof of Work" visual, the LEVEL (0-4) is the most important part for the visuals.
-        // The exact count is used for the tooltip.
-        // We can try to extract the count from the aria-label if present, or tool-tip.
-        // The aria-label usually is on the element itself: aria-label="5 contributions on January 21st"
-        const fullRegex = /aria-label="(\d+|No) contributions? on [^"]+"\s+data-date="([^"]+)"\s+data-level="([^"]+)"/g;
-
-        // Alternative: First find all days, then extract.
-        // Let's use a simpler approach that matches the pattern generally found in the source.
-
-        // Pattern: <td ... data-date="YYYY-MM-DD" data-level="X" ... aria-label="N contributions ...">
-        const regex = /data-date="(\d{4}-\d{2}-\d{2})"[^>]*data-level="(\d)"[^>]*aria-label="(\d+|No) contributions?/g;
-
-        // Note: The order of attributes in HTML string might vary.
-        // Let's rely on finding `data-date` and `data-level` and `aria-label` in the same tag.
-
-        // Better approach: Split by <td or <rect
-        const tags = html.match(/<(td|rect)[^>]+class="ContributionCalendar-day"[^>]*>/g) || [];
-
-        if (tags.length === 0) {
-            console.warn('No contribution days found. GitHub markup might have changed.');
-            return;
-        }
-
-        console.log(`Found ${tags.length} days.`);
-
-        for (const tag of tags) {
-            const dateMatch = tag.match(/data-date="([^"]+)"/);
-            const levelMatch = tag.match(/data-level="([^"]+)"/);
-            const contentMatch = tag.match(/aria-label="(\d+|No)\s+contributions?/); // "No" or "5"
-
-            if (dateMatch) {
-                const date = dateMatch[1];
-                const level = levelMatch ? parseInt(levelMatch[1], 10) : 0;
-                let count = 0;
-
-                if (contentMatch) {
-                    if (contentMatch[1] === 'No') {
-                        count = 0;
-                    } else {
-                        count = parseInt(contentMatch[1], 10);
+    const query = `
+        query($userName: String!) {
+            user(login: $userName) {
+                contributionsCollection {
+                    contributionCalendar {
+                        totalContributions
+                        weeks {
+                            contributionDays {
+                                contributionCount
+                                date
+                                contributionLevel
+                            }
+                        }
                     }
                 }
-
-                // Only add if we have valid data
-                contributions.push({ date, count, level });
             }
         }
+    `;
 
-        // Sort by date just in case
-        contributions.sort((a, b) => a.date.localeCompare(b.date));
+    const response = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query,
+            variables: { userName: GITHUB_USERNAME }
+        })
+    });
 
-        // Filter to last 365 days mostly handled by what GitHub returns (usually one year)
+    if (!response.ok) {
+        throw new Error(`GitHub API request failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.errors) {
+        throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+    }
+
+    const weeks = data.data.user.contributionsCollection.contributionCalendar.weeks;
+    const contributions = [];
+
+    for (const week of weeks) {
+        for (const day of week.contributionDays) {
+            contributions.push({
+                date: day.date,
+                count: day.contributionCount,
+                level: day.contributionLevel === 'NONE' ? 0 :
+                    day.contributionLevel === 'FIRST_QUARTILE' ? 1 :
+                        day.contributionLevel === 'SECOND_QUARTILE' ? 2 :
+                            day.contributionLevel === 'THIRD_QUARTILE' ? 3 : 4
+            });
+        }
+    }
+
+    return contributions;
+}
+
+/**
+ * Fetch contributions by scraping HTML (fallback method with cached data)
+ */
+async function fetchContributionsViaHTML() {
+    console.log('Fetching contributions via HTML scraping (cached data)...');
+
+    const URL = `https://github.com/users/${GITHUB_USERNAME}/contributions`;
+
+    const response = await fetch(URL);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const tags = html.match(/<(td|rect)[^>]+class="ContributionCalendar-day"[^>]*>/g) || [];
+
+    if (tags.length === 0) {
+        console.warn('No contribution days found. GitHub markup might have changed.');
+        return [];
+    }
+
+    console.log(`Found ${tags.length} days.`);
+
+    const contributions = [];
+    for (const tag of tags) {
+        const dateMatch = tag.match(/data-date="([^"]+)"/);
+        const levelMatch = tag.match(/data-level="([^"]+)"/);
+        const contentMatch = tag.match(/aria-label="(\d+|No)\s+contributions?/);
+
+        if (dateMatch) {
+            const date = dateMatch[1];
+            const level = levelMatch ? parseInt(levelMatch[1], 10) : 0;
+            let count = 0;
+
+            if (contentMatch) {
+                if (contentMatch[1] === 'No') {
+                    count = 0;
+                } else {
+                    count = parseInt(contentMatch[1], 10);
+                }
+            }
+
+            contributions.push({ date, count, level });
+        }
+    }
+
+    contributions.sort((a, b) => a.date.localeCompare(b.date));
+    return contributions;
+}
+
+/**
+ * Main function to fetch and save contributions
+ */
+async function fetchContributions() {
+    console.log(`Fetching GitHub contributions for ${GITHUB_USERNAME}...`);
+
+    try {
+        let contributions;
+
+        // Try API first if token is available, otherwise fall back to HTML
+        if (GITHUB_TOKEN) {
+            try {
+                contributions = await fetchContributionsViaAPI();
+                console.log('✓ Successfully fetched real-time data via GitHub API');
+            } catch (apiError) {
+                console.warn('API fetch failed, falling back to HTML scraping:', apiError.message);
+                contributions = await fetchContributionsViaHTML();
+            }
+        } else {
+            console.log('⚠ No GITHUB_TOKEN found - using HTML scraping (may have 12-24h delay)');
+            console.log('  To get real-time data, set GITHUB_TOKEN environment variable');
+            contributions = await fetchContributionsViaHTML();
+        }
 
         const fileContent = `
 export interface ContributionDay {
@@ -96,7 +161,7 @@ export const REAL_CONTRIBUTIONS: ContributionDay[] = ${JSON.stringify(contributi
 `;
 
         fs.writeFileSync(OUTPUT_FILE, fileContent.trim());
-        console.log(`Successfully wrote ${contributions.length} days to ${OUTPUT_FILE}`);
+        console.log(`✓ Successfully wrote ${contributions.length} days to ${OUTPUT_FILE}`);
 
     } catch (error) {
         console.error('Error fetching contributions:', error);

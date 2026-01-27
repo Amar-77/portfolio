@@ -32,6 +32,8 @@ jobs:
         run: npm ci
 
       - name: Update Contribution Data 📊
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run update-contributions
 
       - name: Build 🏗️

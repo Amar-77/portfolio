@@ -9,8 +9,11 @@ import Journey from "@/components/sections/Journey";
 import Contact from "@/components/sections/Contact";
 import Resume from "@/components/sections/Resume";
 import Footer from "@/components/Footer";
+import { getGitHubStats } from "@/lib/get-github-stats";
 
-export default function Home() {
+export default async function Home() {
+  const contributions = await getGitHubStats();
+
   return (
     <main className="relative bg-black min-h-screen">
       <Navbar />
@@ -31,7 +34,7 @@ export default function Home() {
       <div className="relative z-10 bg-white">
         <About />
         <Projects />
-        <ProofOfWork />
+        <ProofOfWork initialData={contributions} />
         <VideoEditing />
         <Skills />
         <Journey />
