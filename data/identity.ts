@@ -133,9 +133,9 @@ export const IDENTITY = {
             },
             {
                 id: 4,
-                title: "Tejaswi 2024",
-                description: "Freelance work done for Marian Engineering College",
-                src: "/portfolio/videos/tejaswi_2024.mp4",
+                title: "Personal Edit",
+                description: "Concept, capture, edit",
+                src: "/portfolio/videos/reel4.mp4",
             },
             {
                 id: 5,
@@ -151,22 +151,29 @@ export const IDENTITY = {
             },
             {
                 id: 7,
-                title: "Freelance work",
-                description: "Concept, capture, edit",
-                src: "/portfolio/videos/reel1.mp4",
+                title: "Tejaswi 2024",
+                description: "Freelance work done for Marian Engineering College",
+                src: "/portfolio/videos/tejaswi_2024.mp4",
             },
             {
                 id: 8,
                 title: "Freelance work",
                 description: "Concept, capture, edit",
-                src: "/portfolio/videos/reel2.mp4",
+                src: "/portfolio/videos/reel1.mp4",
             },
             {
                 id: 9,
                 title: "Freelance work",
                 description: "Concept, capture, edit",
+                src: "/portfolio/videos/reel2.mp4",
+            },
+            {
+                id: 10,
+                title: "Freelance work",
+                description: "Concept, capture, edit",
                 src: "/portfolio/videos/reel3.mp4",
             },
+
         ]
     }
 };

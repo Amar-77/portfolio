@@ -6,41 +6,6 @@ export interface ContributionDay {
 
 export const REAL_CONTRIBUTIONS: ContributionDay[] = [
     {
-        "date": "2025-01-19",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-20",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-21",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-22",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-23",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-24",
-        "count": 0,
-        "level": 0
-    },
-    {
-        "date": "2025-01-25",
-        "count": 0,
-        "level": 0
-    },
-    {
         "date": "2025-01-26",
         "count": 0,
         "level": 0
@@ -1859,5 +1824,20 @@ export const REAL_CONTRIBUTIONS: ContributionDay[] = [
         "date": "2026-01-24",
         "count": 0,
         "level": 0
+    },
+    {
+        "date": "2026-01-25",
+        "count": 0,
+        "level": 4
+    },
+    {
+        "date": "2026-01-26",
+        "count": 0,
+        "level": 0
+    },
+    {
+        "date": "2026-01-27",
+        "count": 0,
+        "level": 4
     }
 ];
